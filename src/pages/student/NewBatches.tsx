@@ -50,7 +50,7 @@ export default function NewBatches() {
           Array.isArray(userData.enrolled_batches) &&
           !userData.enrolled_batches.includes(batch._id)
       );
-      console.log(unboughtBatches);
+      // console.log(unboughtBatches);
       setBatches(unboughtBatches || []);
       setLoading(false);
     } catch (err) {
@@ -133,7 +133,7 @@ export default function NewBatches() {
           ondismiss: async function () {
             if (payment_status !== "cancelled")
               await transactionService.cancelOrder({ transactionId });
-            console.log("Payment cancelled by user.");
+            // console.log("Payment cancelled by user.");
           },
         },
       };

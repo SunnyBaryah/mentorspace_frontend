@@ -49,9 +49,7 @@ export default function TeacherRoom() {
   const [micOn, setMicOn] = useState<boolean>(true);
   const [streaming, setStreaming] = useState<boolean>(false);
   const [whiteboardOpen, setWhiteboardOpen] = useState<boolean>(false);
-  const [whiteboardElements, setWhiteboardElements] = React.useState<
-    ExcalidrawElement[]
-  >([]);
+  const [whiteboardElements, _] = React.useState<ExcalidrawElement[]>([]);
   const [showInstructions, setShowInstructions] = useState<boolean>(false);
 
   useEffect(() => {

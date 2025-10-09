@@ -19,7 +19,7 @@ import { useParams } from "react-router-dom";
 
 export default function ManageLessons() {
   const { batch_id } = useParams();
-  console.log(batch_id);
+  // console.log(batch_id);
   const { register, handleSubmit, setValue, reset } = useForm<Lesson>();
   const [lessons, setLessons] = useState([]);
   const [isEdit, setIsEdit] = useState<boolean>(false);
@@ -27,7 +27,7 @@ export default function ManageLessons() {
   const lessonsFetcher = async () => {
     if (!batch_id) return;
     const serviceResponse = await batchService.getBatchLessons(batch_id);
-    console.log(serviceResponse);
+    // console.log(serviceResponse);
     setLessons(serviceResponse?.data.data.batch.lessons);
   };
 

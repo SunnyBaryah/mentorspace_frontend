@@ -7,7 +7,7 @@ export default function Batches() {
 
   const batchesFetcher = async () => {
     const serviceResponse = await studentAuthService.getEnrolledBatches();
-    console.log(serviceResponse);
+    // console.log(serviceResponse);
     setBatches(serviceResponse?.data.data);
   };
 
