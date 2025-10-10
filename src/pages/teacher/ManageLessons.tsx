@@ -25,6 +25,7 @@ export default function ManageLessons() {
   const [lessons, setLessons] = useState([]);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(true);
+  const [editLoading, setEditLoading] = useState<boolean>(false);
 
   const lessonsFetcher = async () => {
     if (!batch_id) return;
@@ -88,6 +89,7 @@ export default function ManageLessons() {
   };
 
   const handleEditClick = async (id: string) => {
+    setEditLoading(true);
     if (isEdit === false) {
       setIsEdit(true);
     }
@@ -107,6 +109,7 @@ export default function ManageLessons() {
     setValue("start_time", formatDateTimeLocal(foundLesson.start_time));
     setValue("end_time", formatDateTimeLocal(foundLesson.end_time));
     setValue("recording_url", foundLesson.recording_url);
+    setEditLoading(false);
   };
 
   useEffect(() => {
@@ -231,79 +234,91 @@ export default function ManageLessons() {
                           {correctDateAndTimeForDisplay(lesson.end_time)}
                         </p>
                       </DialogTrigger>
-                      <DialogContent className="bg-darkest text-white border-0 shadow-xl">
-                        <DialogHeader>
-                          <DialogTitle>Edit Lesson Details</DialogTitle>
-                        </DialogHeader>
-                        <div>
-                          <form
-                            onSubmit={handleSubmit(create)}
-                            className="w-full"
-                          >
-                            <div className="my-2">
-                              <Label htmlFor="name" className="text-right">
-                                Name
-                              </Label>
-                              <Input
-                                id="name"
-                                {...register("name", {
-                                  required: true,
-                                })}
-                                className="bg-[#535C91] text-white border-0 mt-2"
-                              />
-                            </div>
-                            <div className="my-2">
-                              <Label
-                                htmlFor="description"
-                                className="text-right"
-                              >
-                                Description
-                              </Label>
-                              <Input
-                                id="description"
-                                {...register("description")}
-                                className="bg-[#535C91] text-white border-0 mt-2"
-                              />
-                            </div>
-                            <div className="my-2">
-                              <Label htmlFor="start_time">Start time</Label>
-                              <Input
-                                id="start_time"
-                                type="datetime-local"
-                                {...register("start_time", { required: true })}
-                                className="bg-[#535C91] text-white border-0 mt-2"
-                              />
-                            </div>
-                            <div className="my-2">
-                              <Label htmlFor="end_time">End time</Label>
-                              <Input
-                                id="end_time"
-                                type="datetime-local"
-                                {...register("end_time", { required: true })}
-                                className="bg-[#535C91] text-white border-0 mt-2"
-                              />
-                            </div>
-                            <div className="my-2">
-                              <Label htmlFor="recording_url">
-                                Recording URL
-                              </Label>
-                              <Input
-                                id="recording_url"
-                                type="text"
-                                {...register("recording_url")}
-                                className="bg-[#535C91] text-white border-0 mt-2"
-                              />
-                            </div>
-
-                            <Button
-                              className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] hover:text-inputBG py-2 rounded-md font-medium shadow-md transition"
-                              type="submit"
+                      {!editLoading ? (
+                        <DialogContent className="bg-darkest text-white border-0 shadow-xl">
+                          <DialogHeader>
+                            <DialogTitle>Edit Lesson Details</DialogTitle>
+                          </DialogHeader>
+                          <div>
+                            <form
+                              onSubmit={handleSubmit(create)}
+                              className="w-full"
                             >
-                              <>Save changes</>
-                            </Button>
-                          </form>
-                        </div>
-                      </DialogContent>
+                              <div className="my-2">
+                                <Label htmlFor="name" className="text-right">
+                                  Name
+                                </Label>
+                                <Input
+                                  id="name"
+                                  {...register("name", {
+                                    required: true,
+                                  })}
+                                  className="bg-[#535C91] text-white border-0 mt-2"
+                                />
+                              </div>
+                              <div className="my-2">
+                                <Label
+                                  htmlFor="description"
+                                  className="text-right"
+                                >
+                                  Description
+                                </Label>
+                                <Input
+                                  id="description"
+                                  {...register("description")}
+                                  className="bg-[#535C91] text-white border-0 mt-2"
+                                />
+                              </div>
+                              <div className="my-2">
+                                <Label htmlFor="start_time">Start time</Label>
+                                <Input
+                                  id="start_time"
+                                  type="datetime-local"
+                                  {...register("start_time", {
+                                    required: true,
+                                  })}
+                                  className="bg-[#535C91] text-white border-0 mt-2"
+                                />
+                              </div>
+                              <div className="my-2">
+                                <Label htmlFor="end_time">End time</Label>
+                                <Input
+                                  id="end_time"
+                                  type="datetime-local"
+                                  {...register("end_time", { required: true })}
+                                  className="bg-[#535C91] text-white border-0 mt-2"
+                                />
+                              </div>
+                              <div className="my-2">
+                                <Label htmlFor="recording_url">
+                                  Recording URL
+                                </Label>
+                                <Input
+                                  id="recording_url"
+                                  type="text"
+                                  {...register("recording_url")}
+                                  className="bg-[#535C91] text-white border-0 mt-2"
+                                />
+                              </div>
+
+                              <Button
+                                className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] hover:text-inputBG py-2 rounded-md font-medium shadow-md transition"
+                                type="submit"
+                              >
+                                <>Save changes</>
+                              </Button>
+                            </form>
+                          </div>
+                        </DialogContent>
+                      ) : (
+                        <DialogContent className="bg-darkest border border-white/20 text-white">
+                          <Skeleton className="bg-white/10 border-white/20 h-8 w-full mt-8" />
+                          <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                          <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                          <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                          <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                        </DialogContent>
+                      )}
                     </Dialog>
                   );
                 }
