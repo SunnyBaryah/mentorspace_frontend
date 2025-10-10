@@ -27,6 +27,7 @@ export default function ManageBatches() {
   const { register, handleSubmit, setValue, reset } = useForm<Batch>();
   const [batches, setBatches] = useState([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [editLoading, setEditLoading] = useState<boolean>(true);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [topics, setTopics] = useState<{ name: string }[]>([]);
   const { userData } = teacherStore();
@@ -91,6 +92,7 @@ export default function ManageBatches() {
   };
 
   const handleEditClick = async (id: string) => {
+    setEditLoading(true);
     if (!isEdit) setIsEdit(true);
     const response = await batchService.getBatch(id);
     if (!response) return;
@@ -105,6 +107,7 @@ export default function ManageBatches() {
     setValue("description", foundBatch.description);
     setValue("start_date", formatDateTimeLocal(foundBatch.start_date));
     setValue("end_date", formatDateTimeLocal(foundBatch.end_date));
+    setEditLoading(false);
   };
 
   useEffect(() => {
@@ -274,103 +277,116 @@ export default function ManageBatches() {
                     </DialogTrigger>
 
                     {/* Edit Dialog */}
-                    <DialogContent className="bg-darkest text-white border-0 shadow-xl">
-                      <DialogHeader>
-                        <DialogTitle>Edit Batch Details</DialogTitle>
-                      </DialogHeader>
-                      <form
-                        onSubmit={handleSubmit(create)}
-                        className="space-y-3 mt-2"
-                      >
-                        <div>
-                          <Label htmlFor="name">Name</Label>
-                          <Input
-                            id="name"
-                            {...register("name", { required: true })}
-                            className="bg-[#535C91] text-white border-0 mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="description">Description</Label>
-                          <Input
-                            id="description"
-                            {...register("description")}
-                            className="bg-[#535C91] text-white border-0 mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="start_date">Start Date</Label>
-                          <Input
-                            id="start_date"
-                            type="datetime-local"
-                            {...register("start_date", { required: true })}
-                            className="bg-[#535C91] text-white border-0 mt-2"
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="end_date">End Date</Label>
-                          <Input
-                            id="end_date"
-                            type="datetime-local"
-                            {...register("end_date", { required: true })}
-                            className="bg-[#535C91] text-white border-0 mt-2"
-                          />
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <Label>Topics</Label>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleAddTopic();
-                            }}
-                            className="hover:scale-110 transition-transform"
-                          >
-                            <img
-                              className="w-[20px]"
-                              src={plusIcon}
-                              alt="Add topic"
-                            />
-                          </button>
-                        </div>
-
-                        {topics.map((topic, index) => (
-                          <div key={index} className="flex items-center gap-2">
+                    {!editLoading ? (
+                      <DialogContent className="bg-darkest text-white border-0 shadow-xl">
+                        <DialogHeader>
+                          <DialogTitle>Edit Batch Details</DialogTitle>
+                        </DialogHeader>
+                        <form
+                          onSubmit={handleSubmit(create)}
+                          className="space-y-3 mt-2"
+                        >
+                          <div>
+                            <Label htmlFor="name">Name</Label>
                             <Input
-                              value={topic.name}
-                              onChange={(e) =>
-                                handleTopicChange(index, e.target.value)
-                              }
-                              className="bg-[#535C91] text-white border-0"
+                              id="name"
+                              {...register("name", { required: true })}
+                              className="bg-[#535C91] text-white border-0 mt-2"
                             />
+                          </div>
+                          <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Input
+                              id="description"
+                              {...register("description")}
+                              className="bg-[#535C91] text-white border-0 mt-2"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="start_date">Start Date</Label>
+                            <Input
+                              id="start_date"
+                              type="datetime-local"
+                              {...register("start_date", { required: true })}
+                              className="bg-[#535C91] text-white border-0 mt-2"
+                            />
+                          </div>
+                          <div>
+                            <Label htmlFor="end_date">End Date</Label>
+                            <Input
+                              id="end_date"
+                              type="datetime-local"
+                              {...register("end_date", { required: true })}
+                              className="bg-[#535C91] text-white border-0 mt-2"
+                            />
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Label>Topics</Label>
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                handleRemoveTopic(index);
+                                handleAddTopic();
                               }}
                               className="hover:scale-110 transition-transform"
                             >
                               <img
-                                className="w-[25px]"
-                                src={crossIcon}
-                                alt="Remove topic"
+                                className="w-[20px]"
+                                src={plusIcon}
+                                alt="Add topic"
                               />
                             </button>
                           </div>
-                        ))}
 
-                        <Button
-                          className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] py-2 rounded-md font-medium shadow-md transition"
-                          type="submit"
-                        >
-                          Save Changes
-                        </Button>
-                      </form>
-                    </DialogContent>
+                          {topics.map((topic, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2"
+                            >
+                              <Input
+                                value={topic.name}
+                                onChange={(e) =>
+                                  handleTopicChange(index, e.target.value)
+                                }
+                                className="bg-[#535C91] text-white border-0"
+                              />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleRemoveTopic(index);
+                                }}
+                                className="hover:scale-110 transition-transform"
+                              >
+                                <img
+                                  className="w-[25px]"
+                                  src={crossIcon}
+                                  alt="Remove topic"
+                                />
+                              </button>
+                            </div>
+                          ))}
+
+                          <Button
+                            className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] py-2 rounded-md font-medium shadow-md transition"
+                            type="submit"
+                          >
+                            Save Changes
+                          </Button>
+                        </form>
+                      </DialogContent>
+                    ) : (
+                      <DialogContent className="bg-darkest border border-white/20 text-white">
+                        <Skeleton className="bg-white/10 border-white/20 h-8 w-full mt-8" />
+                        <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                        <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                        <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                        <Skeleton className="bg-white/10 border-white/20 h-8 w-full" />
+                      </DialogContent>
+                    )}
                   </Dialog>
                 )
               )}
