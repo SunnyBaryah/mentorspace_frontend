@@ -20,10 +20,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Skeleton } from "@/components/ui/skeleton";
 export default function Lessons() {
   const { batch_id } = useParams();
   const [batch, setBatch] = useState<Batch>();
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [openLesson, setOpenLesson] = useState<Lesson | null>(null);
 
   const correctDateAndTimeForDisplay = (time: string) => {
@@ -51,10 +53,12 @@ export default function Lessons() {
 
   const lessonsFetcher = async () => {
     if (!batch_id) return;
+    setLoading(true);
     const serviceResponse = await batchService.getBatchLessons(batch_id);
     // console.log(serviceResponse);
     setBatch(serviceResponse?.data.data.batch);
     setLessons(serviceResponse?.data.data.batch.lessons);
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -69,7 +73,14 @@ export default function Lessons() {
       className="min-h-dvh flex flex-col items-center gap-8 bg-gradient-to-br from-[#070F2B] to-[#535C91] pt-32"
     >
       <Dialog>
-        <DialogTrigger className="bg-lighter hover:bg-darker w-3/5 sm:w-2/5 lg:w-1/5 text-inputBG font-light py-4 rounded-lg text-xl lg:text-2xl hover:scale-95  transition">
+        <DialogTrigger
+          disabled={loading}
+          className={`${
+            loading
+              ? "bg-gray-500 text-gray-300"
+              : "bg-lighter hover:bg-darker text-inputBG"
+          } w-3/5 sm:w-2/5 lg:w-1/5  font-light py-4 rounded-lg text-xl lg:text-2xl hover:scale-95  transition`}
+        >
           Batch Details
         </DialogTrigger>
 
@@ -191,129 +202,138 @@ export default function Lessons() {
       <h1 className="text-white text-center text-4xl lg:text-5xl font-light mt-4">
         Batch Lessons
       </h1>
-      <div className="w-full">
-        {lessons && lessons.length > 0 ? (
-          <div className="flex flex-wrap items-center justify-center py-5 lg:py-10 gap-4 lg:gap-5 w-5/6 lg:w-3/5 mx-auto bg-lightest rounded-lg mb-10">
-            <div className="w-5/6 lg:w-4/5 flex flex-row justify-between items-center flex-wrap text-black text-xl lg:text-2xl px-4 rounded-lg">
-              <h1 className="text-2xl">Name</h1>
-              <h1 className="text-2xl">Status</h1>
-            </div>
+      {!loading ? (
+        <div className="w-full">
+          {lessons && lessons.length > 0 ? (
+            <div className="flex flex-wrap items-center justify-center py-5 lg:py-10 gap-4 lg:gap-5 w-5/6 lg:w-3/5 mx-auto bg-lightest rounded-lg mb-10">
+              <div className="w-5/6 lg:w-4/5 flex flex-row justify-between items-center flex-wrap text-black text-xl lg:text-2xl px-4 rounded-lg">
+                <h1 className="text-2xl">Name</h1>
+                <h1 className="text-2xl">Status</h1>
+              </div>
 
-            {lessons.map((lesson: Lesson, ind) => {
-              const status = getLessonStatus(
-                lesson.start_time,
-                lesson.end_time
-              );
+              {lessons.map((lesson: Lesson, ind) => {
+                const status = getLessonStatus(
+                  lesson.start_time,
+                  lesson.end_time
+                );
 
-              const handleClick = (e: React.MouseEvent) => {
-                e.preventDefault(); // Prevent navigation
-                setOpenLesson(lesson);
-              };
+                const handleClick = (e: React.MouseEvent) => {
+                  e.preventDefault(); // Prevent navigation
+                  setOpenLesson(lesson);
+                };
 
-              return (
-                <button
-                  key={ind}
-                  onClick={handleClick}
-                  className="w-5/6 lg:w-4/5 bg-lighter hover:bg-darker flex justify-between hover:scale-105 transition text-inputBG px-4 py-4 rounded-lg"
-                >
-                  <span>{lesson.name}</span>
-                  <span
-                    className={`font-semibold ${
-                      status === "Ongoing"
-                        ? "text-green-500"
-                        : status === "Upcoming"
-                        ? "text-yellow-500"
-                        : "text-gray-400"
-                    }`}
+                return (
+                  <button
+                    key={ind}
+                    onClick={handleClick}
+                    className="w-5/6 lg:w-4/5 bg-lighter hover:bg-darker flex justify-between hover:scale-105 transition text-inputBG px-4 py-4 rounded-lg"
                   >
-                    {status}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="flex flex-wrap flex-col items-center justify-center py-10 gap-5 lg:gap-5 w-4/5 mx-auto bg-lightest rounded-lg min-h-80">
-            <h2 className="text-white text-center text-xl lg:text-2xl font-light">
-              No lesson found!
-            </h2>
-          </div>
-        )}
-
-        {/* ShadCN Dialog for upcoming lesson details */}
-        <Dialog open={!!openLesson} onOpenChange={() => setOpenLesson(null)}>
-          <DialogContent
-            className="max-w-3xl bg-darkest rounded-2xl shadow-2xl px-8 py-6  border-none
-    [&>button]:text-white [&>button:hover]:text-gray-300"
-          >
-            <AlertDialogHeader>
-              <DialogTitle className="text-xl text-inputBG">
-                {openLesson?.name}
-              </DialogTitle>
-              <DialogDescription className="text-md text-inputBG font-light">
-                <p>
-                  <strong>Description:</strong>{" "}
-                  {openLesson?.description
-                    ? openLesson.description
-                    : "Not available"}
-                </p>
-                <p>
-                  <strong>Start:</strong>{" "}
-                  {openLesson?.start_time
-                    ? new Date(openLesson.start_time).toLocaleString()
-                    : "Not available"}
-                </p>
-                <p>
-                  <strong>End:</strong>{" "}
-                  {openLesson?.end_time
-                    ? new Date(openLesson.end_time).toLocaleString()
-                    : "Not available"}
-                </p>
-              </DialogDescription>
-            </AlertDialogHeader>
-
-            <div className="flex flex-wrap gap-4 justify-between">
-              {openLesson &&
-                (() => {
-                  const status = getLessonStatus(
-                    openLesson?.start_time,
-                    openLesson?.end_time
-                  );
-                  const isDisabled = ["Upcoming", "Done"].includes(status);
-
-                  return (
-                    <Link
-                      to={isDisabled ? "#" : `${openLesson._id}/room`}
-                      onClick={(e) => {
-                        if (isDisabled) {
-                          e.preventDefault();
-                          // Optional: open your dialog here for "Upcoming" lessons
-                          // if (status === "Upcoming") {
-                          //   setShowLessonDialog(true); // if you have dialog state
-                          // }
-                        }
-                      }}
-                      className={`text-lg flex-grow rounded-lg flex justify-center items-center font-semibold transition py-1 ${
-                        isDisabled
-                          ? "bg-gray-400 text-gray-700 cursor-not-allowed"
-                          : "bg-lighter hover:bg-darker text-inputBG"
+                    <span>{lesson.name}</span>
+                    <span
+                      className={`font-semibold ${
+                        status === "Ongoing"
+                          ? "text-green-500"
+                          : status === "Upcoming"
+                          ? "text-yellow-500"
+                          : "text-gray-400"
                       }`}
                     >
-                      Take Lesson
-                    </Link>
-                  );
-                })()}
-              <Button
-                disabled={!openLesson?.recording_url}
-                // onClick={() => setOpenLesson(null)}
-                className="flex-grow text-lg bg-lightest"
-              >
-                View Recording
-              </Button>
+                      {status}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+          ) : (
+            <div className="flex flex-wrap flex-col items-center justify-center py-10 gap-5 lg:gap-5 w-4/5 mx-auto bg-lightest rounded-lg min-h-80">
+              <h2 className="text-white text-center text-xl lg:text-2xl font-light">
+                No lesson found!
+              </h2>
+            </div>
+          )}
+
+          {/* ShadCN Dialog for upcoming lesson details */}
+          <Dialog open={!!openLesson} onOpenChange={() => setOpenLesson(null)}>
+            <DialogContent
+              className="max-w-3xl bg-darkest rounded-2xl shadow-2xl px-8 py-6  border-none
+    [&>button]:text-white [&>button:hover]:text-gray-300"
+            >
+              <AlertDialogHeader>
+                <DialogTitle className="text-xl text-inputBG">
+                  {openLesson?.name}
+                </DialogTitle>
+                <DialogDescription className="text-md text-inputBG font-light">
+                  <p>
+                    <strong>Description:</strong>{" "}
+                    {openLesson?.description
+                      ? openLesson.description
+                      : "Not available"}
+                  </p>
+                  <p>
+                    <strong>Start:</strong>{" "}
+                    {openLesson?.start_time
+                      ? new Date(openLesson.start_time).toLocaleString()
+                      : "Not available"}
+                  </p>
+                  <p>
+                    <strong>End:</strong>{" "}
+                    {openLesson?.end_time
+                      ? new Date(openLesson.end_time).toLocaleString()
+                      : "Not available"}
+                  </p>
+                </DialogDescription>
+              </AlertDialogHeader>
+
+              <div className="flex flex-wrap gap-4 justify-between">
+                {openLesson &&
+                  (() => {
+                    const status = getLessonStatus(
+                      openLesson?.start_time,
+                      openLesson?.end_time
+                    );
+                    const isDisabled = ["Upcoming", "Done"].includes(status);
+
+                    return (
+                      <Link
+                        to={isDisabled ? "#" : `${openLesson._id}/room`}
+                        onClick={(e) => {
+                          if (isDisabled) {
+                            e.preventDefault();
+                            // Optional: open your dialog here for "Upcoming" lessons
+                            // if (status === "Upcoming") {
+                            //   setShowLessonDialog(true); // if you have dialog state
+                            // }
+                          }
+                        }}
+                        className={`text-lg flex-grow rounded-lg flex justify-center items-center font-semibold transition py-1 ${
+                          isDisabled
+                            ? "bg-gray-400 text-gray-700 cursor-not-allowed"
+                            : "bg-lighter hover:bg-darker text-inputBG"
+                        }`}
+                      >
+                        Take Lesson
+                      </Link>
+                    );
+                  })()}
+                <Button
+                  disabled={!openLesson?.recording_url}
+                  // onClick={() => setOpenLesson(null)}
+                  className="flex-grow text-lg bg-lightest"
+                >
+                  View Recording
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+      ) : (
+        <div className="w-full">
+          <div className="flex flex-wrap items-center justify-center py-5 lg:py-10 gap-4 lg:gap-5 w-5/6 lg:w-3/5 mx-auto bg-lightest rounded-lg mb-10">
+            <Skeleton className="h-14 bg-lighter w-4/5" />
+            <Skeleton className="h-14 bg-lighter w-4/5" />
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

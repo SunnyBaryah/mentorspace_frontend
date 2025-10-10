@@ -21,17 +21,21 @@ import batchService from "@/services/batches";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 import teacherStore from "@/store/teacherStore";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ManageBatches() {
   const { register, handleSubmit, setValue, reset } = useForm<Batch>();
   const [batches, setBatches] = useState([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [isEdit, setIsEdit] = useState<boolean>(false);
   const [topics, setTopics] = useState<{ name: string }[]>([]);
   const { userData } = teacherStore();
 
   const batchesFetcher = async () => {
+    setLoading(true);
     const serviceResponse = await teacherAuthService.getBatches();
     setBatches(serviceResponse?.data.data);
+    setLoading(false);
   };
 
   const handleAddTopic = () => setTopics([...topics, { name: "" }]);
@@ -241,146 +245,155 @@ export default function ManageBatches() {
       </Dialog>
 
       {/* Batch List */}
-      <div className="w-full">
-        {batches && batches.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-            {batches.map(
-              (batch: { _id: string; name: string; price: number }, ind) => (
-                <Dialog key={ind}>
-                  <DialogTrigger
-                    className="sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex flex-col sm:flex-row justify-between items-center text-[#070F2B] px-6 py-5 rounded-xl hover:scale-105 transition-all shadow-md"
-                    onClick={() => handleEditClick(batch._id)}
-                  >
-                    <p className="text-lg font-semibold">{batch.name}</p>
-                    <div className="flex flex-col sm:flex-row gap-3 mt-2 sm:mt-0">
-                      <Link
-                        className="bg-lighter text-white px-3 py-2 rounded-md hover:bg-[#0D1B4C] transition"
-                        to={`${batch._id}/active-lesson`}
-                      >
-                        Take Lesson
-                      </Link>
-                      <Link
-                        className="bg-darker text-white px-3 py-2 rounded-md hover:bg-[#27276C] transition"
-                        to={`${batch._id}/lessons`}
-                      >
-                        Manage Lessons
-                      </Link>
-                    </div>
-                  </DialogTrigger>
-
-                  {/* Edit Dialog */}
-                  <DialogContent className="bg-darkest text-white border-0 shadow-xl">
-                    <DialogHeader>
-                      <DialogTitle>Edit Batch Details</DialogTitle>
-                    </DialogHeader>
-                    <form
-                      onSubmit={handleSubmit(create)}
-                      className="space-y-3 mt-2"
+      {!loading ? (
+        <div className="w-full">
+          {batches && batches.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+              {batches.map(
+                (batch: { _id: string; name: string; price: number }, ind) => (
+                  <Dialog key={ind}>
+                    <DialogTrigger
+                      className="sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex flex-col sm:flex-row justify-between items-center text-[#070F2B] px-6 py-5 rounded-xl hover:scale-105 transition-all shadow-md"
+                      onClick={() => handleEditClick(batch._id)}
                     >
-                      <div>
-                        <Label htmlFor="name">Name</Label>
-                        <Input
-                          id="name"
-                          {...register("name", { required: true })}
-                          className="bg-[#535C91] text-white border-0 mt-2"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Input
-                          id="description"
-                          {...register("description")}
-                          className="bg-[#535C91] text-white border-0 mt-2"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="start_date">Start Date</Label>
-                        <Input
-                          id="start_date"
-                          type="datetime-local"
-                          {...register("start_date", { required: true })}
-                          className="bg-[#535C91] text-white border-0 mt-2"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="end_date">End Date</Label>
-                        <Input
-                          id="end_date"
-                          type="datetime-local"
-                          {...register("end_date", { required: true })}
-                          className="bg-[#535C91] text-white border-0 mt-2"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Label>Topics</Label>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddTopic();
-                          }}
-                          className="hover:scale-110 transition-transform"
+                      <p className="text-lg font-semibold">{batch.name}</p>
+                      <div className="flex flex-col sm:flex-row gap-3 mt-2 sm:mt-0">
+                        <Link
+                          className="bg-lighter text-white px-3 py-2 rounded-md hover:bg-[#0D1B4C] transition"
+                          to={`${batch._id}/active-lesson`}
                         >
-                          <img
-                            className="w-[20px]"
-                            src={plusIcon}
-                            alt="Add topic"
-                          />
-                        </button>
+                          Take Lesson
+                        </Link>
+                        <Link
+                          className="bg-darker text-white px-3 py-2 rounded-md hover:bg-[#27276C] transition"
+                          to={`${batch._id}/lessons`}
+                        >
+                          Manage Lessons
+                        </Link>
                       </div>
+                    </DialogTrigger>
 
-                      {topics.map((topic, index) => (
-                        <div key={index} className="flex items-center gap-2">
+                    {/* Edit Dialog */}
+                    <DialogContent className="bg-darkest text-white border-0 shadow-xl">
+                      <DialogHeader>
+                        <DialogTitle>Edit Batch Details</DialogTitle>
+                      </DialogHeader>
+                      <form
+                        onSubmit={handleSubmit(create)}
+                        className="space-y-3 mt-2"
+                      >
+                        <div>
+                          <Label htmlFor="name">Name</Label>
                           <Input
-                            value={topic.name}
-                            onChange={(e) =>
-                              handleTopicChange(index, e.target.value)
-                            }
-                            className="bg-[#535C91] text-white border-0"
+                            id="name"
+                            {...register("name", { required: true })}
+                            className="bg-[#535C91] text-white border-0 mt-2"
                           />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Input
+                            id="description"
+                            {...register("description")}
+                            className="bg-[#535C91] text-white border-0 mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="start_date">Start Date</Label>
+                          <Input
+                            id="start_date"
+                            type="datetime-local"
+                            {...register("start_date", { required: true })}
+                            className="bg-[#535C91] text-white border-0 mt-2"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="end_date">End Date</Label>
+                          <Input
+                            id="end_date"
+                            type="datetime-local"
+                            {...register("end_date", { required: true })}
+                            className="bg-[#535C91] text-white border-0 mt-2"
+                          />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <Label>Topics</Label>
                           <button
                             type="button"
                             onClick={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleRemoveTopic(index);
+                              handleAddTopic();
                             }}
                             className="hover:scale-110 transition-transform"
                           >
                             <img
-                              className="w-[25px]"
-                              src={crossIcon}
-                              alt="Remove topic"
+                              className="w-[20px]"
+                              src={plusIcon}
+                              alt="Add topic"
                             />
                           </button>
                         </div>
-                      ))}
 
-                      <Button
-                        className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] py-2 rounded-md font-medium shadow-md transition"
-                        type="submit"
-                      >
-                        Save Changes
-                      </Button>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              )
-            )}
+                        {topics.map((topic, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <Input
+                              value={topic.name}
+                              onChange={(e) =>
+                                handleTopicChange(index, e.target.value)
+                              }
+                              className="bg-[#535C91] text-white border-0"
+                            />
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleRemoveTopic(index);
+                              }}
+                              className="hover:scale-110 transition-transform"
+                            >
+                              <img
+                                className="w-[25px]"
+                                src={crossIcon}
+                                alt="Remove topic"
+                              />
+                            </button>
+                          </div>
+                        ))}
+
+                        <Button
+                          className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] py-2 rounded-md font-medium shadow-md transition"
+                          type="submit"
+                        >
+                          Save Changes
+                        </Button>
+                      </form>
+                    </DialogContent>
+                  </Dialog>
+                )
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col justify-center items-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+              <h2 className="text-white text-2xl lg:text-3xl font-light">
+                No batches found!
+              </h2>
+              <p className="text-gray-400">
+                Click “Add New Batch” to create your first one ✨
+              </p>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="w-full">
+          <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+            <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+            <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center py-12 gap-4 w-4/5 mx-auto bg-[#1B1A55]/60 rounded-2xl min-h-60 shadow-inner">
-            <h2 className="text-white text-2xl lg:text-3xl font-light">
-              No batches found!
-            </h2>
-            <p className="text-gray-400">
-              Click “Add New Batch” to create your first one ✨
-            </p>
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </motion.div>
   );
 }

@@ -16,6 +16,7 @@ import batchService from "@/services/batches";
 import lessonService from "@/services/lessons";
 import { toast } from "react-toastify";
 import { useParams } from "react-router-dom";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ManageLessons() {
   const { batch_id } = useParams();
@@ -23,12 +24,15 @@ export default function ManageLessons() {
   const { register, handleSubmit, setValue, reset } = useForm<Lesson>();
   const [lessons, setLessons] = useState([]);
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const lessonsFetcher = async () => {
     if (!batch_id) return;
+    setLoading(true);
     const serviceResponse = await batchService.getBatchLessons(batch_id);
     // console.log(serviceResponse);
     setLessons(serviceResponse?.data.data.batch.lessons);
+    setLoading(false);
   };
 
   const formatDateTimeLocal = (isoString?: string): string => {
@@ -198,115 +202,127 @@ export default function ManageLessons() {
           </div>
         </DialogContent>
       </Dialog>
-      <div className="w-full">
-        {lessons && lessons.length > 0 ? (
-          <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
-            <div className="w-5/6 lg:w-4/5 flex justify-between text-inputBG text-xl lg:text-2xl md:px-4 rounded-lg">
-              <p>Name</p> <p>Start - End</p>
-            </div>
-            {lessons.map(
-              (
-                lesson: {
-                  _id: string;
-                  name: string;
-                  start_time: string;
-                  end_time: string;
-                },
-                ind
-              ) => {
-                return (
-                  <Dialog key={ind}>
-                    <DialogTrigger
-                      className="w-full sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex gap-5 justify-between hover:scale-105 transition text-[#070F2B] font-semibold px-4 py-4 rounded-lg"
-                      onClick={() => handleEditClick(lesson._id)}
-                    >
-                      <p>{lesson.name}</p>{" "}
-                      <p>
-                        {correctDateAndTimeForDisplay(lesson.start_time)} -
-                        {correctDateAndTimeForDisplay(lesson.end_time)}
-                      </p>
-                    </DialogTrigger>
-                    <DialogContent className="bg-darkest text-white border-0 shadow-xl">
-                      <DialogHeader>
-                        <DialogTitle>Edit Lesson Details</DialogTitle>
-                      </DialogHeader>
-                      <div>
-                        <form
-                          onSubmit={handleSubmit(create)}
-                          className="w-full"
-                        >
-                          <div className="my-2">
-                            <Label htmlFor="name" className="text-right">
-                              Name
-                            </Label>
-                            <Input
-                              id="name"
-                              {...register("name", {
-                                required: true,
-                              })}
-                              className="bg-[#535C91] text-white border-0 mt-2"
-                            />
-                          </div>
-                          <div className="my-2">
-                            <Label htmlFor="description" className="text-right">
-                              Description
-                            </Label>
-                            <Input
-                              id="description"
-                              {...register("description")}
-                              className="bg-[#535C91] text-white border-0 mt-2"
-                            />
-                          </div>
-                          <div className="my-2">
-                            <Label htmlFor="start_time">Start time</Label>
-                            <Input
-                              id="start_time"
-                              type="datetime-local"
-                              {...register("start_time", { required: true })}
-                              className="bg-[#535C91] text-white border-0 mt-2"
-                            />
-                          </div>
-                          <div className="my-2">
-                            <Label htmlFor="end_time">End time</Label>
-                            <Input
-                              id="end_time"
-                              type="datetime-local"
-                              {...register("end_time", { required: true })}
-                              className="bg-[#535C91] text-white border-0 mt-2"
-                            />
-                          </div>
-                          <div className="my-2">
-                            <Label htmlFor="recording_url">Recording URL</Label>
-                            <Input
-                              id="recording_url"
-                              type="text"
-                              {...register("recording_url")}
-                              className="bg-[#535C91] text-white border-0 mt-2"
-                            />
-                          </div>
-
-                          <Button
-                            className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] hover:text-inputBG py-2 rounded-md font-medium shadow-md transition"
-                            type="submit"
+      {!loading ? (
+        <div className="w-full">
+          {lessons && lessons.length > 0 ? (
+            <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+              <div className="w-5/6 lg:w-4/5 flex justify-between text-inputBG text-xl lg:text-2xl md:px-4 rounded-lg">
+                <p>Name</p> <p>Start - End</p>
+              </div>
+              {lessons.map(
+                (
+                  lesson: {
+                    _id: string;
+                    name: string;
+                    start_time: string;
+                    end_time: string;
+                  },
+                  ind
+                ) => {
+                  return (
+                    <Dialog key={ind}>
+                      <DialogTrigger
+                        className="w-full sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex gap-5 justify-between hover:scale-105 transition text-[#070F2B] font-semibold px-4 py-4 rounded-lg"
+                        onClick={() => handleEditClick(lesson._id)}
+                      >
+                        <p>{lesson.name}</p>{" "}
+                        <p>
+                          {correctDateAndTimeForDisplay(lesson.start_time)} -
+                          {correctDateAndTimeForDisplay(lesson.end_time)}
+                        </p>
+                      </DialogTrigger>
+                      <DialogContent className="bg-darkest text-white border-0 shadow-xl">
+                        <DialogHeader>
+                          <DialogTitle>Edit Lesson Details</DialogTitle>
+                        </DialogHeader>
+                        <div>
+                          <form
+                            onSubmit={handleSubmit(create)}
+                            className="w-full"
                           >
-                            <>Save changes</>
-                          </Button>
-                        </form>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                );
-              }
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-wrap flex-col items-center justify-center py-10 gap-5 lg:gap-5 w-4/5 mx-auto bg-lightest rounded-lg min-h-80">
-            <h2 className="text-white text-center text-xl lg:text-2xl font-light">
-              No lessons found!
-            </h2>
-          </div>
-        )}
-      </div>
+                            <div className="my-2">
+                              <Label htmlFor="name" className="text-right">
+                                Name
+                              </Label>
+                              <Input
+                                id="name"
+                                {...register("name", {
+                                  required: true,
+                                })}
+                                className="bg-[#535C91] text-white border-0 mt-2"
+                              />
+                            </div>
+                            <div className="my-2">
+                              <Label
+                                htmlFor="description"
+                                className="text-right"
+                              >
+                                Description
+                              </Label>
+                              <Input
+                                id="description"
+                                {...register("description")}
+                                className="bg-[#535C91] text-white border-0 mt-2"
+                              />
+                            </div>
+                            <div className="my-2">
+                              <Label htmlFor="start_time">Start time</Label>
+                              <Input
+                                id="start_time"
+                                type="datetime-local"
+                                {...register("start_time", { required: true })}
+                                className="bg-[#535C91] text-white border-0 mt-2"
+                              />
+                            </div>
+                            <div className="my-2">
+                              <Label htmlFor="end_time">End time</Label>
+                              <Input
+                                id="end_time"
+                                type="datetime-local"
+                                {...register("end_time", { required: true })}
+                                className="bg-[#535C91] text-white border-0 mt-2"
+                              />
+                            </div>
+                            <div className="my-2">
+                              <Label htmlFor="recording_url">
+                                Recording URL
+                              </Label>
+                              <Input
+                                id="recording_url"
+                                type="text"
+                                {...register("recording_url")}
+                                className="bg-[#535C91] text-white border-0 mt-2"
+                              />
+                            </div>
+
+                            <Button
+                              className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] hover:text-inputBG py-2 rounded-md font-medium shadow-md transition"
+                              type="submit"
+                            >
+                              <>Save changes</>
+                            </Button>
+                          </form>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  );
+                }
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+              <h2 className="text-white text-center text-xl lg:text-2xl font-light">
+                No lessons found!
+              </h2>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex flex-wrap justify-center gap-5 w-full sm:w-4/5 lg:w-3/5 xl:w-2/5 mx-auto bg-[#E5E7EB]/10 backdrop-blur-md rounded-2xl p-6 shadow-inner">
+          <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+          <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+        </div>
+      )}
     </motion.div>
   );
 }

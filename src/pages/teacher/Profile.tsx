@@ -25,13 +25,17 @@ import { useForm } from "react-hook-form";
 import plusIcon from "/plus-icon-2.svg";
 import crossIcon from "/cross-icon-2.svg";
 import DetailRow from "@/components/common/DetailRow";
+import { Skeleton } from "@/components/ui/skeleton";
 export default function Profile() {
   const { register, handleSubmit, setValue, reset } = useForm<Teacher>();
   const [teacherData, setTeacherData] = useState<Teacher>();
   const [isEdit, setIsEdit] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [editLoading, setEditLoading] = useState<boolean>(false);
   const [subjects, setSubjects] = useState<string[]>([]);
 
   const teacherFetcher = async () => {
+    setLoading(true);
     const response = await teacherAuthService.getCurrentUser();
     if (!response) {
       toast.error(
@@ -41,6 +45,7 @@ export default function Profile() {
     }
     // console.log(response.data);
     setTeacherData(response.data.data);
+    setLoading(false);
   };
   useEffect(() => {
     teacherFetcher();
@@ -70,6 +75,7 @@ export default function Profile() {
     if (isEdit === false) {
       setIsEdit(true);
     }
+    setEditLoading(true);
     const response = await teacherAuthService.getCurrentUser();
     if (!response) {
       return;
@@ -81,6 +87,7 @@ export default function Profile() {
     setValue("description", foundTeacher.description);
     setValue("upi_id", foundTeacher.upi_id);
     setSubjects(foundTeacher.subjects);
+    setEditLoading(false);
   };
 
   const handleAddSubject = () => {
@@ -116,70 +123,83 @@ export default function Profile() {
       </motion.h1>
 
       {/* Glassmorphic Card */}
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.3 }}
-        className="w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-10 flex flex-col lg:flex-row items-center gap-10 text-white"
-      >
-        <div className="bg-lightest/30 border border-white/20 p-6 rounded-2xl shadow-lg flex justify-center items-center">
-          <img
-            src={profileLogo}
-            alt="profile"
-            className="w-[180px] hover:scale-105 transition-transform duration-300"
-          />
-        </div>
-
-        {teacherData && (
-          <div className="flex flex-col gap-4 w-full">
-            <DetailRow label="Username" value={teacherData.username} />
-            <DetailRow label="Email" value={teacherData.email} />
-            <DetailRow label="UPI ID" value={teacherData.upi_id} />
-
-            <Accordion
-              type="single"
-              collapsible
-              className="border-b border-white/20"
-              defaultValue="item-1"
-            >
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-xl font-semibold text-white hover:text-blue-300 transition">
-                  Description
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-200 text-lg font-light">
-                  {teacherData.description
-                    ? teacherData.description
-                    : "No description added"}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            <Accordion
-              type="single"
-              collapsible
-              className="border-b border-white/20"
-              defaultValue="item-1"
-            >
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-xl font-semibold text-white hover:text-blue-300 transition">
-                  Subjects
-                </AccordionTrigger>
-                <AccordionContent className="text-gray-200 text-lg font-light space-y-1">
-                  {teacherData.subjects && teacherData.subjects.length > 0 ? (
-                    teacherData.subjects.map(
-                      (subject: string, index: number) => (
-                        <p key={index}>• {subject}</p>
-                      )
-                    )
-                  ) : (
-                    <p>No subjects added</p>
-                  )}
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+      {!loading ? (
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-10 flex flex-col lg:flex-row items-center gap-10 text-white"
+        >
+          <div className="bg-lightest/30 border border-white/20 p-6 rounded-2xl shadow-lg flex justify-center items-center">
+            <img
+              src={profileLogo}
+              alt="profile"
+              className="w-[180px] hover:scale-105 transition-transform duration-300"
+            />
           </div>
-        )}
-      </motion.div>
+
+          {teacherData && (
+            <div className="flex flex-col gap-4 w-full">
+              <DetailRow label="Username" value={teacherData.username} />
+              <DetailRow label="Email" value={teacherData.email} />
+              <DetailRow label="UPI ID" value={teacherData.upi_id} />
+
+              <Accordion
+                type="single"
+                collapsible
+                className="border-b border-white/20"
+                defaultValue="item-1"
+              >
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-xl font-semibold text-white hover:text-blue-300 transition">
+                    Description
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-200 text-lg font-light">
+                    {teacherData.description
+                      ? teacherData.description
+                      : "No description added"}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
+              <Accordion
+                type="single"
+                collapsible
+                className="border-b border-white/20"
+                defaultValue="item-1"
+              >
+                <AccordionItem value="item-1">
+                  <AccordionTrigger className="text-xl font-semibold text-white hover:text-blue-300 transition">
+                    Subjects
+                  </AccordionTrigger>
+                  <AccordionContent className="text-gray-200 text-lg font-light space-y-1">
+                    {teacherData.subjects && teacherData.subjects.length > 0 ? (
+                      teacherData.subjects.map(
+                        (subject: string, index: number) => (
+                          <p key={index}>• {subject}</p>
+                        )
+                      )
+                    ) : (
+                      <p>No subjects added</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </div>
+          )}
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.3 }}
+          className="w-full max-w-4xl bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl shadow-2xl p-10 flex flex-col justify-center items-center gap-6 text-white"
+        >
+          <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+          <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+          <Skeleton className="h-14 bg-[#9BA4B5]/90 w-4/5" />
+        </motion.div>
+      )}
 
       {/* Edit Button */}
       <motion.div
@@ -190,77 +210,92 @@ export default function Profile() {
       >
         <Dialog>
           <DialogTrigger
+            disabled={loading}
             onClick={() => handleEditClick()}
-            className="w-full bg-gradient-to-r from-lighter to-lightest text-white text-lg py-4 rounded-xl shadow-md hover:shadow-lg hover:scale-[0.98] transition-all font-light tracking-wide"
+            className={`w-full ${
+              loading
+                ? "bg-gray-500 text-gray-200"
+                : "bg-gradient-to-r from-lighter to-lightest text-white"
+            }  text-lg py-4 rounded-xl shadow-md hover:shadow-lg hover:scale-[0.98] transition-all font-light tracking-wide`}
           >
             Edit Details
           </DialogTrigger>
 
-          <DialogContent className="bg-darkest border border-white/20 text-white">
-            <DialogHeader>
-              <DialogTitle className="text-2xl font-semibold text-center">
-                Edit Details
-              </DialogTitle>
-            </DialogHeader>
+          {!editLoading ? (
+            <DialogContent className="bg-darkest border border-white/20 text-white">
+              <DialogHeader>
+                <DialogTitle className="text-2xl font-semibold text-center">
+                  Edit Details
+                </DialogTitle>
+              </DialogHeader>
 
-            <form onSubmit={handleSubmit(create)} className="mt-4 space-y-3">
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  {...register("description")}
-                  className="bg-white/10 border-white/20 text-white mt-3"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="upi_id">UPI ID</Label>
-                <Input
-                  id="upi_id"
-                  type="text"
-                  {...register("upi_id")}
-                  className="bg-white/10 border-white/20 text-white mt-3"
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label>Subjects</Label>
-                <button
-                  type="button"
-                  onClick={handleAddSubject}
-                  className="hover:scale-110 transition"
-                >
-                  <img src={plusIcon} alt="Add" className="w-[22px]" />
-                </button>
-              </div>
-
-              {subjects.map((subject: string, index: number) => (
-                <div key={index} className="flex items-center gap-3">
+              <form onSubmit={handleSubmit(create)} className="mt-4 space-y-3">
+                <div>
+                  <Label htmlFor="description">Description</Label>
                   <Input
-                    value={subject}
-                    onChange={(e) => handleSubjectChange(index, e.target.value)}
-                    className="bg-white/10 border-white/20 text-white"
+                    id="description"
+                    {...register("description")}
+                    className="bg-white/10 border-white/20 text-white mt-3"
                   />
+                </div>
+
+                <div>
+                  <Label htmlFor="upi_id">UPI ID</Label>
+                  <Input
+                    id="upi_id"
+                    type="text"
+                    {...register("upi_id")}
+                    className="bg-white/10 border-white/20 text-white mt-3"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <Label>Subjects</Label>
                   <button
                     type="button"
-                    onClick={() => handleRemoveSubject(index)}
+                    onClick={handleAddSubject}
                     className="hover:scale-110 transition"
                   >
-                    <img src={crossIcon} alt="Remove" className="w-[25px]" />
+                    <img src={plusIcon} alt="Add" className="w-[22px]" />
                   </button>
                 </div>
-              ))}
 
-              <DialogFooter>
-                <Button
-                  type="submit"
-                  className="mt-4 w-full bg-gradient-to-r from-[#1B1A55] to-[#535C91] hover:opacity-90 text-white rounded-xl py-2"
-                >
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
-          </DialogContent>
+                {subjects.map((subject: string, index: number) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <Input
+                      value={subject}
+                      onChange={(e) =>
+                        handleSubjectChange(index, e.target.value)
+                      }
+                      className="bg-white/10 border-white/20 text-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSubject(index)}
+                      className="hover:scale-110 transition"
+                    >
+                      <img src={crossIcon} alt="Remove" className="w-[25px]" />
+                    </button>
+                  </div>
+                ))}
+
+                <DialogFooter>
+                  <Button
+                    type="submit"
+                    className="mt-4 w-full bg-gradient-to-r from-[#1B1A55] to-[#535C91] hover:opacity-90 text-white rounded-xl py-2"
+                  >
+                    Save Changes
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          ) : (
+            <DialogContent className="bg-darkest border border-white/20 text-white">
+              <Skeleton className="bg-white/10 border-white/20 h-10 w-full mt-8" />
+              <Skeleton className="bg-white/10 border-white/20 h-10 w-full" />
+              <Skeleton className="bg-white/10 border-white/20 h-10 w-full" />
+            </DialogContent>
+          )}
         </Dialog>
       </motion.div>
     </motion.div>

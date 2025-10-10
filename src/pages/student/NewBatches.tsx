@@ -42,6 +42,7 @@ export default function NewBatches() {
 
   const fetchBatches = async (query: string) => {
     try {
+      setBatches([]);
       setLoading(true);
       const res = await batchService.searchBatches(query);
       if (!res) return;
