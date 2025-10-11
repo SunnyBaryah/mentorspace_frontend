@@ -38,7 +38,7 @@ export default function ActiveLesson() {
         getLessonStatus(lesson.start_time, lesson.end_time) === "Ongoing"
     );
     setLessons(activeLessons);
-    // setLoading(false);
+    setLoading(false);
   };
 
   useEffect(() => {
