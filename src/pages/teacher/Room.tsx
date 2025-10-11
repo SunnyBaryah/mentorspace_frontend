@@ -32,7 +32,6 @@ import { Input } from "@/components/ui/input";
 
 export default function TeacherRoom() {
   const { roomId } = useParams<{ roomId: string }>();
-  const numericRoomId = roomId ? Number(roomId) : null;
   const navigate = useNavigate();
 
   // Refs
@@ -53,16 +52,16 @@ export default function TeacherRoom() {
   const [showInstructions, setShowInstructions] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!numericRoomId) return;
+    if (!roomId) return;
 
-    joinRoom(numericRoomId);
+    joinRoom(roomId);
     onNewMessage((msg: string) => setChatMessages((prev) => [...prev, msg]));
 
-    getMessages(numericRoomId, (messages: string[]) => {
+    getMessages(roomId, (messages: string[]) => {
       setChatMessages(messages);
       console.log("💬 Fetched old messages:", messages);
     });
-  }, [numericRoomId]);
+  }, [roomId]);
 
   useEffect(() => {
     if (excalidrawAPI.current) {
@@ -155,8 +154,8 @@ export default function TeacherRoom() {
   };
 
   const handleSendMessage = () => {
-    if (msg.trim() && numericRoomId) {
-      sendMessage(msg, numericRoomId);
+    if (msg.trim() && roomId) {
+      sendMessage(msg, roomId);
       setMsg("");
     }
   };

@@ -256,11 +256,11 @@ export default function ManageBatches() {
                 (batch: { _id: string; name: string; price: number }, ind) => (
                   <Dialog key={ind}>
                     <DialogTrigger
-                      className="sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex flex-col sm:flex-row justify-between items-center text-[#070F2B] px-6 py-5 rounded-xl hover:scale-105 transition-all shadow-md"
+                      className="w-7/8 sm:w-5/6 lg:w-4/5 bg-[#9BA4B5]/90 hover:bg-[#B8C1D1] flex flex-col sm:flex-row justify-between items-center text-[#070F2B] px-6 py-5 rounded-xl hover:scale-105 transition-all shadow-md"
                       onClick={() => handleEditClick(batch._id)}
                     >
                       <p className="text-lg font-semibold">{batch.name}</p>
-                      <div className="flex flex-col sm:flex-row gap-3 mt-2 sm:mt-0">
+                      <div className="flex flex-wrap justify-center sm:flex-row gap-3 mt-2 sm:mt-0">
                         <Link
                           className="bg-lighter text-white px-3 py-2 rounded-md hover:bg-[#0D1B4C] transition"
                           to={`${batch._id}/active-lesson`}

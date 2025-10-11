@@ -24,7 +24,6 @@ type Params = {
 export default function StudentRoom() {
   // ✅ roomId comes from URL params, convert it to number
   const { roomId } = useParams<Params>();
-  const numericRoomId = Number(roomId);
 
   // ✅ Ref types
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -39,14 +38,15 @@ export default function StudentRoom() {
   const [whiteboardOpen, setWhiteboardOpen] = useState<boolean>(false);
 
   useEffect(() => {
-    console.log(`🚪 Joining room: ${numericRoomId}`);
-    joinRoom(numericRoomId);
+    if (!roomId) return;
+    console.log(`🚪 Joining room: ${roomId}`);
+    joinRoom(roomId);
 
     const handleNewMessage = (msg: string) =>
       setChatMessages((prev) => [...prev, msg]);
     onNewMessage(handleNewMessage);
 
-    getMessages(numericRoomId, (messages: string[]) => {
+    getMessages(roomId, (messages: string[]) => {
       setChatMessages(messages);
       console.log("💬 Fetched old messages:", messages);
     });
@@ -96,7 +96,7 @@ export default function StudentRoom() {
     socket.on("disconnect", () => setIsConnected(false));
 
     return () => {
-      console.log(`🚪 Leaving room: ${numericRoomId}`);
+      console.log(`🚪 Leaving room: ${roomId}`);
       leaveRoom();
       socket.off("new-producer", handleNewProducer);
       socket.off("whiteboard-update");
@@ -105,11 +105,11 @@ export default function StudentRoom() {
       socket.off("disconnect");
       setChatMessages([]);
     };
-  }, [numericRoomId]);
+  }, [roomId]);
 
   const handleSendMessage = () => {
-    if (msg.trim()) {
-      sendMessage(msg, numericRoomId);
+    if (msg.trim() && roomId) {
+      sendMessage(msg, roomId);
       setMsg("");
     }
   };
@@ -124,7 +124,7 @@ export default function StudentRoom() {
   const handleExcalidrawAPI = (api: ExcalidrawImperativeAPI) => {
     console.log("✅ Excalidraw API is now ready", api);
     excalidrawAPIRef.current = api;
-    socket.emit("request-whiteboard-state", numericRoomId);
+    socket.emit("request-whiteboard-state", roomId);
   };
 
   const handleVideoPlay = () => {

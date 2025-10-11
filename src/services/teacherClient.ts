@@ -9,10 +9,11 @@ import type {
 import type { LinePoint } from "../interfaces/ILinePoint";
 import type { DrawLinePayload } from "../interfaces/IDrawLinePayload";
 import type { CursorMovePayload } from "../interfaces/ICursorMovePayload";
+import { socket_url } from "@/constants";
 
 type ChatMessage = string;
 
-const socket = io("http://localhost:9000");
+const socket = io(socket_url);
 
 let device: mediasoupClient.Device;
 let videoProducer: Producer | null = null;
@@ -161,11 +162,11 @@ export async function leaveStream(videoElement: HTMLVideoElement) {
 }
 
 // --- Chat --- //
-export function joinRoom(roomId: number) {
+export function joinRoom(roomId: string) {
   socket.emit("user-join-room", roomId);
 }
 
-export function sendMessage(message: ChatMessage, roomId: number): void {
+export function sendMessage(message: ChatMessage, roomId: string): void {
   socket.emit("user-message", message, roomId);
 }
 

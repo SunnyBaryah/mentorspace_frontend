@@ -9,6 +9,7 @@ import type {
 } from "mediasoup-client/types";
 import type { ConsumeStreamData } from "../interfaces/IConsumeStreamData";
 import type { GetMessagesResponse } from "../interfaces/IGetMessagesResponse";
+import { socket_url } from "@/constants";
 declare global {
   interface Window {
     remoteStream?: MediaStream;
@@ -17,7 +18,7 @@ declare global {
 
 type Message = string;
 
-const socket = io("http://localhost:9000");
+const socket = io(socket_url);
 let device: mediasoupClient.Device;
 let recvTransport: Transport | null = null;
 let isConsuming: boolean = false; // 💡 Flag to avoid duplicate flows
@@ -227,11 +228,12 @@ export function leaveRoom() {
 }
 
 // --- Chat functions --- //
-export function joinRoom(roomId: number) {
+export function joinRoom(roomId: string) {
+  console.log("Room joined : ", roomId);
   socket.emit("user-join-room", roomId);
 }
 
-export function sendMessage(message: string, roomId: number) {
+export function sendMessage(message: string, roomId: string) {
   socket.emit("user-message", message, roomId);
 }
 
@@ -240,7 +242,7 @@ export function onNewMessage(callback: (message: Message) => void): void {
 }
 
 export function getMessages(
-  roomId: number,
+  roomId: string,
   callback: (messages: Message[]) => void
 ): void {
   socket.emit("get-messages", roomId, (response: GetMessagesResponse) => {
