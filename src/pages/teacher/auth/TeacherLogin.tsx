@@ -28,19 +28,20 @@ export default function TeacherLogin() {
   const [loading, setLoading] = useState<boolean>(false);
   const navigate = useNavigate();
 
-  if(authData.loggedIn){
+  if (authData.loggedIn) {
     navigate("/");
   }
 
   const loginFunc: SubmitHandler<SignInFormData> = async (data) => {
     setError("");
     setLoading(true);
+
     try {
       const session = await teacherAuthService.login(data);
-      // console.log(session);
+
       if (session && session.status === 200) {
         const userData = await teacherAuthService.getCurrentUser();
-        // console.log("User Data : ", userData);
+
         if (userData) {
           const serializableUserData = {
             id: userData.data.data._id,
@@ -48,17 +49,20 @@ export default function TeacherLogin() {
             username: userData.data.data.username,
             upi_id: userData.data.data.upi_id,
           };
-          // console.log("Data : ", serializableUserData);
-          // dispatch(authLogin(serializableUserData));
-          teacherLogin(serializableUserData);
-          saveLogin({ loggedIn: true, role: "teacher" });
-          toast.success("Logged in successfully", { position: "bottom-right" });
-          navigate("/teacher/dashboard");
+
+          // Wrap state updates and navigation in setTimeout to defer after render
+          setTimeout(() => {
+            teacherLogin(serializableUserData);
+            saveLogin({ loggedIn: true, role: "teacher" });
+            toast.success("Logged in successfully", {
+              position: "bottom-right",
+            });
+            navigate("/teacher/dashboard");
+          }, 0);
         }
       }
     } catch (error: any) {
-      // console.log(error);
-      switch (error.response.status) {
+      switch (error.response?.status) {
         case 401:
           setError("Incorrect Password");
           break;
@@ -71,10 +75,11 @@ export default function TeacherLogin() {
         default:
           setError(error.message);
       }
-      // setError(error.message);
     }
+
     setLoading(false);
   };
+
   return (
     <motion.div
       initial={{ opacity: 0 }}

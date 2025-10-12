@@ -1,9 +1,9 @@
-import { AlertDialogHeader } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -106,38 +106,36 @@ export default function ActiveLesson() {
           )}
           <Dialog open={!!openLesson} onOpenChange={() => setOpenLesson(null)}>
             <DialogContent className="bg-lighter">
-              <AlertDialogHeader>
+              <DialogHeader>
                 <DialogTitle className="text-xl text-inputBG">
                   {openLesson?.name}
                 </DialogTitle>
-                <DialogDescription className="text-md text-inputBG font-light">
-                  <p>
+                <DialogDescription className="text-md text-inputBG font-light space-y-2 flex flex-col gap-0 mt-2">
+                  <div>
                     <strong>Description:</strong>{" "}
-                    {openLesson?.description
-                      ? openLesson.description
-                      : "Not available"}
-                  </p>
-                  <p>
+                    {openLesson?.description || "Not available"}
+                  </div>
+                  <div>
                     <strong>Start:</strong>{" "}
                     {openLesson?.start_time
                       ? new Date(openLesson.start_time).toLocaleString()
                       : "Not available"}
-                  </p>
-                  <p>
+                  </div>
+                  <div>
                     <strong>End:</strong>{" "}
                     {openLesson?.end_time
                       ? new Date(openLesson.end_time).toLocaleString()
                       : "Not available"}
-                  </p>
+                  </div>
                 </DialogDescription>
-              </AlertDialogHeader>
+              </DialogHeader>
 
               <div className="flex flex-wrap gap-4 justify-between">
                 {openLesson &&
                   (() => {
                     const status = getLessonStatus(
-                      openLesson?.start_time,
-                      openLesson?.end_time
+                      openLesson.start_time,
+                      openLesson.end_time
                     );
                     const isDisabled = ["Upcoming", "Done"].includes(status);
 
@@ -145,13 +143,7 @@ export default function ActiveLesson() {
                       <Link
                         to={isDisabled ? "#" : `${openLesson._id}/room`}
                         onClick={(e) => {
-                          if (isDisabled) {
-                            e.preventDefault();
-                            // Optional: open your dialog here for "Upcoming" lessons
-                            // if (status === "Upcoming") {
-                            //   setShowLessonDialog(true); // if you have dialog state
-                            // }
-                          }
+                          if (isDisabled) e.preventDefault();
                         }}
                         className={`text-lg flex-grow rounded-lg flex justify-center items-center font-semibold transition py-1 ${
                           isDisabled
@@ -163,9 +155,9 @@ export default function ActiveLesson() {
                       </Link>
                     );
                   })()}
+
                 <Button
                   disabled={!openLesson?.recording_url}
-                  // onClick={() => setOpenLesson(null)}
                   className="flex-grow text-lg bg-lightest"
                 >
                   View Recording

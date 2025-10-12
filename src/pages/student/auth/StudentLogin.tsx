@@ -33,12 +33,13 @@ export default function StudentLogin() {
   const loginFunc: SubmitHandler<SignInFormData> = async (data) => {
     setError("");
     setLoading(true);
+
     try {
       const session = await studentAuthService.login(data);
-      // console.log(session);
+
       if (session && session.status === 200) {
         const userData = await studentAuthService.getCurrentUser();
-        // console.log("User Data : ", userData);
+
         if (userData) {
           const serializableUserData = {
             id: userData.data.data._id,
@@ -46,17 +47,20 @@ export default function StudentLogin() {
             username: userData.data.data.username,
             enrolled_batches: userData.data.data.enrolled_batches,
           };
-          // console.log("Data : ", serializableUserData);
-          // dispatch(authLogin(serializableUserData));
-          studentLogin(serializableUserData);
-          saveLogin({ loggedIn: true, role: "student" });
-          toast.success("Logged in successfully", { position: "bottom-right" });
-          navigate("/student/dashboard");
+
+          // Wrap state updates and navigation inside setTimeout
+          setTimeout(() => {
+            studentLogin(serializableUserData); // update global state
+            saveLogin({ loggedIn: true, role: "student" });
+            toast.success("Logged in successfully", {
+              position: "bottom-right",
+            });
+            navigate("/student/dashboard"); // navigate after state updates
+          }, 0);
         }
       }
     } catch (error: any) {
-      // console.log(error);
-      switch (error.response.status) {
+      switch (error.response?.status) {
         case 401:
           setError("Incorrect Password");
           break;
@@ -69,8 +73,8 @@ export default function StudentLogin() {
         default:
           setError(error.message);
       }
-      // setError(error.message);
     }
+
     setLoading(false);
   };
   return (

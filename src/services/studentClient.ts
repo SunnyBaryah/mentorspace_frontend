@@ -126,12 +126,17 @@ async function createConsumerTransport(
   });
 }
 
-async function consumeStream(data: ConsumeStreamData): Promise<void> {
-  if (!recvTransport) {
-    throw new Error("❌ No recvTransport available");
-  }
+const activeProducerIds = new Set();
 
-  console.log("🎥 Consuming stream now, kind:", data.kind);
+async function consumeStream(data: ConsumeStreamData): Promise<void> {
+  if (!recvTransport) throw new Error("No recvTransport available");
+  if (!window.remoteStream) throw new Error("No remote stream available");
+  // Ignore if this producer is already being consumed
+  if (activeProducerIds.has(data.producerId)) {
+    console.log(`⚠️ Already consuming producer ${data.producerId}`);
+    return;
+  }
+  activeProducerIds.add(data.producerId);
 
   const consumer: Consumer = await recvTransport.consume({
     id: data.id,
@@ -140,32 +145,21 @@ async function consumeStream(data: ConsumeStreamData): Promise<void> {
     rtpParameters: data.rtpParameters,
   });
 
-  console.log("Track kind:", consumer.track.kind);
-
-  // Ensure remoteStream exists
-  if (!window.remoteStream) {
-    window.remoteStream = new MediaStream();
-  }
-
-  // Add track to global stream
   window.remoteStream.addTrack(consumer.track);
 
-  // Attach to video element if available
   if (videoElementRef) {
     await attachStreamToVideo(videoElementRef, window.remoteStream);
-  } else {
-    console.log("📥 Track added, but video element not yet set");
   }
 
   try {
-    await consumer.resume();
+    consumer.resume();
     console.log(`✅ Consumer resumed for kind: ${consumer.kind}`);
   } catch (err) {
     console.warn("❌ Failed to resume consumer:", err);
   }
 }
 
-let lastPlayPromise = null;
+// let lastPlayPromise = null;
 
 async function attachStreamToVideo(
   videoElem: HTMLVideoElement,
@@ -173,25 +167,127 @@ async function attachStreamToVideo(
 ): Promise<void> {
   if (!videoElem) return;
 
-  try {
-    videoElem.pause();
-  } catch (e) {}
+  // Defensive: if no tracks yet, wait briefly for a track to appear
+  if (!stream || stream.getTracks().length === 0) {
+    console.warn(
+      "⚠️ attachStreamToVideo called but stream has no tracks. Waiting up to 2s for tracks..."
+    );
+    await new Promise<void>((resolve) => {
+      const timeout = setTimeout(() => {
+        console.warn("⚠️ Timeout waiting for tracks.");
+        resolve();
+      }, 2000);
 
-  videoElem.srcObject = stream;
-  videoElem.muted = false; // Enable audio from teacher
+      const onTrackAdded = () => {
+        if (stream.getTracks().length > 0) {
+          clearTimeout(timeout);
+          stream.removeEventListener("addtrack", onTrackAdded as any);
+          resolve();
+        }
+      };
+
+      // Some browsers fire addtrack on MediaStream object
+      // but TS doesn't know the exact signature — cast to any
+      (stream as any).addEventListener?.("addtrack", onTrackAdded);
+    });
+  }
 
   try {
-    lastPlayPromise = videoElem.play();
-    await lastPlayPromise;
-    console.log("✅ Remote stream playing!");
-  } catch (err: any) {
-    if (err.name === "AbortError") {
-      console.warn(
-        "⚠️ Play aborted, likely due to pause during race — ignoring."
-      );
-    } else {
-      console.error("❌ Error playing video:", err);
+    // ensure muted BEFORE play to help autoplay policies
+    videoElem.autoplay = true;
+    videoElem.muted = true;
+    videoElem.playsInline = true;
+
+    // assign srcObject synchronously
+    videoElem.srcObject = stream;
+
+    console.log(
+      "📺 Assigned srcObject. Tracks:",
+      stream.getTracks().map((t) => ({
+        kind: t.kind,
+        readyState: t.readyState,
+        enabled: t.enabled,
+      }))
+    );
+
+    // wait for metadata or first frame before calling play
+    const waitForPlayable = () =>
+      new Promise<void>((resolve) => {
+        let resolved = false;
+
+        const tryResolve = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          resolve();
+        };
+
+        const onLoadedMetadata = () => {
+          console.log("📹 Video element loadedmetadata");
+          tryResolve();
+        };
+
+        const onCanPlay = () => {
+          console.log("📹 Video element canplay");
+          tryResolve();
+        };
+
+        const onError = (ev: Event) => {
+          console.error("❌ Video element error event:", ev);
+          tryResolve();
+        };
+
+        const onFrame = () => {
+          console.log(
+            "📸 Received first video frame (requestVideoFrameCallback)"
+          );
+          tryResolve();
+        };
+
+        function cleanup() {
+          videoElem.removeEventListener("loadedmetadata", onLoadedMetadata);
+          videoElem.removeEventListener("canplay", onCanPlay);
+          videoElem.removeEventListener("error", onError);
+          if (
+            (videoElem as any).cancelVideoFrameCallback &&
+            (videoElem as any).__vframeHandle
+          ) {
+            try {
+              (videoElem as any).cancelVideoFrameCallback(
+                (videoElem as any).__vframeHandle
+              );
+            } catch (e) {}
+          }
+        }
+
+        videoElem.addEventListener("loadedmetadata", onLoadedMetadata);
+        videoElem.addEventListener("canplay", onCanPlay);
+        videoElem.addEventListener("error", onError);
+
+        // If supported, use requestVideoFrameCallback for robust first-frame detection
+        if ((videoElem as any).requestVideoFrameCallback) {
+          (videoElem as any).__vframeHandle = (
+            videoElem as any
+          ).requestVideoFrameCallback(onFrame);
+        }
+
+        // safety timeout
+        setTimeout(() => {
+          console.warn("⚠️ waitForPlayable timeout (2s)");
+          tryResolve();
+        }, 2000);
+      });
+
+    await waitForPlayable();
+
+    try {
+      await videoElem.play();
+      console.log("✅ Remote stream playing!");
+    } catch (err: any) {
+      console.error("❌ Error calling play():", err);
     }
+  } catch (err) {
+    console.error("❌ attachStreamToVideo error:", err);
   }
 }
 
@@ -221,6 +317,7 @@ export function leaveRoom() {
 
   isConsuming = false; // Reset flag
 
+  activeProducerIds.clear();
   // Re-register listeners for next room
   registerSocketListeners();
 

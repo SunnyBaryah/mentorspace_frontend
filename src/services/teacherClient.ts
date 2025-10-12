@@ -20,7 +20,6 @@ let videoProducer: Producer | null = null;
 let audioProducer: Producer | null = null;
 let sendTransport: Transport | null = null;
 let localStream: MediaStream | null = null;
-
 let videoTrack: MediaStreamTrack | null = null;
 let audioTrack: MediaStreamTrack | null = null;
 
@@ -34,7 +33,7 @@ export async function startStream(
     console.log("✅ Connected to signaling server");
   }
 
-  // Get camera and mic stream (for students)
+  // --- Get camera and mic stream ---
   localStream = await navigator.mediaDevices.getUserMedia({
     video: true,
     audio: true,
@@ -54,24 +53,31 @@ export async function startStream(
   }
 
   socket.emit("message", { type: "getRouterRtpCapabilities" });
-
-  socket.on("message", async (message) => {
-    switch (message.type) {
-      case "routerCapabilities":
-        await loadDevice(message.data); // message.data is RtpCapabilities
-        socket.emit("message", { type: "createProducerTransport" });
-        break;
-
-      case "producerTransportCreated":
-        await createSendTransport(message.data); // message.data is TransportOptions
-        break;
-
-      default:
-        console.warn("⚠️ Unhandled socket message:", message.type);
-        break;
-    }
-  });
 }
+
+// Handle incoming signaling messages (global)
+socket.on("message", async (message) => {
+  switch (message.type) {
+    case "routerCapabilities":
+      await loadDevice(message.data);
+      socket.emit("message", { type: "createProducerTransport" });
+      break;
+
+    case "producerTransportCreated":
+      await createSendTransport(message.data);
+      break;
+
+    // Add these to prevent the warnings
+    case "producerConnected":
+    case "produced":
+      // These are handled by specific listeners; ignore globally
+      break;
+
+    default:
+      console.warn("⚠️ Unhandled socket message:", message.type);
+      break;
+  }
+});
 
 async function loadDevice(routerRtpCapabilities: RtpCapabilities) {
   device = new mediasoupClient.Device();
@@ -82,28 +88,44 @@ async function loadDevice(routerRtpCapabilities: RtpCapabilities) {
 async function createSendTransport(params: TransportOptions) {
   sendTransport = device.createSendTransport(params);
 
-  sendTransport.on("connect", ({ dtlsParameters }, callback) => {
+  // --- Transport connection ---
+  sendTransport.on("connect", ({ dtlsParameters }, callback, _) => {
     socket.emit("message", {
       type: "connectProducerTransport",
       dtlsParameters,
     });
-    callback();
+
+    const handleConnect = (message: any) => {
+      if (message.type === "producerConnected") {
+        console.log("✅ Producer transport connected");
+        socket.off("message", handleConnect);
+        callback();
+      }
+    };
+
+    socket.on("message", handleConnect);
   });
 
-  sendTransport.on("produce", ({ kind, rtpParameters }, callback) => {
+  // --- Produce event (sending track info) ---
+  sendTransport.on("produce", ({ kind, rtpParameters }, callback, _) => {
     socket.emit("message", {
       type: "produce",
       kind,
       rtpParameters,
     });
 
-    socket.once("message", (message) => {
+    const handleProduce = (message: any) => {
       if (message.type === "produced") {
+        console.log("✅ Producer created:", kind);
+        socket.off("message", handleProduce);
         callback({ id: message.data.id });
       }
-    });
+    };
+
+    socket.on("message", handleProduce);
   });
 
+  // --- Start producing video/audio ---
   if (videoTrack) {
     videoProducer = await sendTransport.produce({ track: videoTrack });
     console.log("✅ Video producer created");
@@ -125,7 +147,7 @@ export function toggleCamera(enable: boolean) {
 
 export function toggleMic(enable: boolean) {
   if (audioProducer) {
-    enable ? audioProducer.resume() : "pause";
+    enable ? audioProducer.resume() : audioProducer.pause();
     console.log(enable ? "🎤 Mic resumed" : "🎤 Mic paused");
   }
 }
@@ -174,7 +196,7 @@ export function onNewMessage(callback: (message: ChatMessage) => void): void {
   socket.on("new-message", callback);
 }
 
-// ---- Whiteboard ---- //
+// --- Whiteboard --- //
 export function sendWhiteboardLine(from: LinePoint, to: LinePoint): void {
   const payload: DrawLinePayload = { from, to };
   socket.emit("draw-line", payload);

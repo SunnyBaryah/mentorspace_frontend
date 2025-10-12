@@ -23,6 +23,14 @@ import type {
 import type { ExcalidrawElement } from "@excalidraw/excalidraw/element/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 
 // type ChatMessage = {
 //   user: string;
@@ -49,7 +57,6 @@ export default function TeacherRoom() {
   const [streaming, setStreaming] = useState<boolean>(false);
   const [whiteboardOpen, setWhiteboardOpen] = useState<boolean>(false);
   const [whiteboardElements, _] = React.useState<ExcalidrawElement[]>([]);
-  const [showInstructions, setShowInstructions] = useState<boolean>(false);
 
   useEffect(() => {
     if (!roomId) return;
@@ -117,9 +124,9 @@ export default function TeacherRoom() {
     }
   };
 
-  const handleStartStream = () => {
-    setShowInstructions(true);
-  };
+  // const handleStartStream = () => {
+  //   setShowInstructions(true);
+  // };
 
   const handleLeaveStream = async () => {
     if (!videoRef.current) return;
@@ -244,12 +251,50 @@ export default function TeacherRoom() {
 
           <div className="w-full mx-auto py-4 flex flex-wrap gap-2 justify-center ">
             {!streaming ? (
-              <Button
-                className="w-full h-[45px] hover:cursor-pointer chat-send-btn lg:text-lg bg-gradient-to-br from-[#070F2B] to-[#535C91]"
-                onClick={handleStartStream}
-              >
-                🎥 Start Stream & Recording
-              </Button>
+              <Dialog>
+                <DialogTrigger className="w-full h-[45px] hover:cursor-pointer text-white rounded-lg hover:scale-[102%] hover:shadow-3xl transition text-center lg:text-lg bg-gradient-to-br from-[#070F2B] to-[#535C91]">
+                  🎥 Start Stream & Recording
+                </DialogTrigger>
+                <DialogContent className="bg-darkest border border-white/20 text-white">
+                  <DialogHeader>
+                    <DialogTitle>
+                      🎯 Important Instructions Before Starting
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <ul className="flex flex-col gap-5 py-3 md:py-6">
+                    <li>
+                      🔹{" "}
+                      <strong>
+                        Open this teacher page in a separate Chrome window
+                      </strong>{" "}
+                      (not as a tab in a multi-tab window).
+                    </li>
+                    <li>
+                      🔹 When prompted, select{" "}
+                      <strong>
+                        the entire window where this teacher page is open
+                      </strong>{" "}
+                      to share.
+                    </li>
+                    <li>
+                      🔹 <strong>Do not press "Stop sharing" manually</strong>{" "}
+                      during the session. Use "Leave Stream & Stop Recording"
+                      button instead.
+                    </li>
+                  </ul>
+                  <DialogClose>
+                    <Button
+                      className="mt-4 w-full bg-[#9BA4B5] hover:bg-[#B8C1D1] text-[#070F2B] py-2 rounded-md font-medium shadow-md transition"
+                      onClick={() => {
+                        handleStartStreamConfirmed();
+                      }}
+                    >
+                      ✅ I Understand, Start Stream
+                    </Button>
+                  </DialogClose>
+                </DialogContent>
+              </Dialog>
             ) : (
               <>
                 <button
@@ -325,42 +370,6 @@ export default function TeacherRoom() {
       </div>
 
       {/* Instructions Modal */}
-      {showInstructions && (
-        <div className="modal-overlay">
-          <div className="modal-content bg-[#e9ecef]">
-            <h3>🎯 Important Instructions Before Starting</h3>
-            <ul>
-              <li>
-                🔹{" "}
-                <strong>
-                  Open this teacher page in a separate Chrome window
-                </strong>{" "}
-                (not as a tab in a multi-tab window).
-              </li>
-              <li>
-                🔹 When prompted, select{" "}
-                <strong>
-                  the entire window where this teacher page is open
-                </strong>{" "}
-                to share.
-              </li>
-              <li>
-                🔹 <strong>Do not press "Stop sharing" manually</strong> during
-                the session. Use "Leave Stream & Stop Recording" button instead.
-              </li>
-            </ul>
-            <Button
-              className="h-[40px] chat-send-btn w-full text-lg"
-              onClick={() => {
-                setShowInstructions(false);
-                handleStartStreamConfirmed();
-              }}
-            >
-              ✅ I Understand, Start Stream
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,7 +10,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { AlertDialogHeader } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import type { Lesson } from "@/interfaces/ILesson";
 import type { Batch } from "@/interfaces/IBatch";
@@ -255,41 +254,39 @@ export default function Lessons() {
           {/* ShadCN Dialog for upcoming lesson details */}
           <Dialog open={!!openLesson} onOpenChange={() => setOpenLesson(null)}>
             <DialogContent
-              className="max-w-3xl bg-darkest rounded-2xl shadow-2xl px-8 py-6  border-none
-    [&>button]:text-white [&>button:hover]:text-gray-300"
+              className="max-w-3xl bg-darkest rounded-2xl shadow-2xl px-8 py-6 border-none
+               [&>button]:text-white [&>button:hover]:text-gray-300"
             >
-              <AlertDialogHeader>
+              <DialogHeader>
                 <DialogTitle className="text-xl text-inputBG">
                   {openLesson?.name}
                 </DialogTitle>
-                <DialogDescription className="text-md text-inputBG font-light">
-                  <p>
+                <DialogDescription className="text-md text-inputBG font-light space-y-2 flex flex-col gap-0 mt-2">
+                  <div>
                     <strong>Description:</strong>{" "}
-                    {openLesson?.description
-                      ? openLesson.description
-                      : "Not available"}
-                  </p>
-                  <p>
+                    {openLesson?.description || "Not available"}
+                  </div>
+                  <div>
                     <strong>Start:</strong>{" "}
                     {openLesson?.start_time
                       ? new Date(openLesson.start_time).toLocaleString()
                       : "Not available"}
-                  </p>
-                  <p>
+                  </div>
+                  <div>
                     <strong>End:</strong>{" "}
                     {openLesson?.end_time
                       ? new Date(openLesson.end_time).toLocaleString()
                       : "Not available"}
-                  </p>
+                  </div>
                 </DialogDescription>
-              </AlertDialogHeader>
+              </DialogHeader>
 
-              <div className="flex flex-wrap gap-4 justify-between">
+              <div className="flex flex-wrap gap-4 justify-between mt-4">
                 {openLesson &&
                   (() => {
                     const status = getLessonStatus(
-                      openLesson?.start_time,
-                      openLesson?.end_time
+                      openLesson.start_time,
+                      openLesson.end_time
                     );
                     const isDisabled = ["Upcoming", "Done"].includes(status);
 
@@ -297,13 +294,7 @@ export default function Lessons() {
                       <Link
                         to={isDisabled ? "#" : `${openLesson._id}/room`}
                         onClick={(e) => {
-                          if (isDisabled) {
-                            e.preventDefault();
-                            // Optional: open your dialog here for "Upcoming" lessons
-                            // if (status === "Upcoming") {
-                            //   setShowLessonDialog(true); // if you have dialog state
-                            // }
-                          }
+                          if (isDisabled) e.preventDefault();
                         }}
                         className={`text-lg flex-grow rounded-lg flex justify-center items-center font-semibold transition py-1 ${
                           isDisabled
@@ -315,9 +306,9 @@ export default function Lessons() {
                       </Link>
                     );
                   })()}
+
                 <Button
                   disabled={!openLesson?.recording_url}
-                  // onClick={() => setOpenLesson(null)}
                   className="flex-grow text-lg bg-lightest"
                 >
                   View Recording
