@@ -89,11 +89,20 @@ async function loadDevice(routerRtpCapabilities: RtpCapabilities) {
 }
 
 async function createConsumerTransport(
-  params: TransportOptions
+  params: TransportOptions & { iceServers?: RTCIceServer[] }
 ): Promise<void> {
   if (!device) throw new Error("Device not initialized");
 
-  recvTransport = device.createRecvTransport(params);
+  console.log(
+    "🔧 Creating consumer transport with ICE servers:",
+    params.iceServers
+  );
+
+  recvTransport = device.createRecvTransport({
+    ...params,
+    // ✅ Pass ICE servers to the transport
+    iceServers: params.iceServers || [{ urls: "stun:stun.l.google.com:19302" }],
+  });
 
   recvTransport.on(
     "connect",
@@ -102,7 +111,7 @@ async function createConsumerTransport(
       callback: () => void,
       errback: (error: Error) => void
     ) => {
-      console.log("connectConsumerTransport sent to server");
+      console.log("🔌 Connecting consumer transport...");
 
       socket.emit("message", {
         type: "connectConsumerTransport",
@@ -119,6 +128,14 @@ async function createConsumerTransport(
       });
     }
   );
+
+  // ✅ Monitor connection state
+  recvTransport.on("connectionstatechange", (state) => {
+    console.log(`🔄 Transport connection state: ${state}`);
+    if (state === "failed" || state === "closed") {
+      console.error("❌ Transport connection failed/closed!");
+    }
+  });
 
   socket.emit("message", {
     type: "consume",
