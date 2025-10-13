@@ -273,9 +273,9 @@ async function attachStreamToVideo(
 
         // safety timeout
         setTimeout(() => {
-          console.warn("⚠️ waitForPlayable timeout (2s)");
+          console.warn("⚠️ waitForPlayable timeout (5s)");
           tryResolve();
-        }, 2000);
+        }, 5000);
       });
 
     await waitForPlayable();
