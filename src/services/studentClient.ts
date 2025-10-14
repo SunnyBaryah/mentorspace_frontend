@@ -93,15 +93,23 @@ async function createConsumerTransport(
 ): Promise<void> {
   if (!device) throw new Error("Device not initialized");
 
-  console.log(
-    "🔧 Creating consumer transport with ICE servers:",
-    params.iceServers
-  );
+  console.log("🔧 Creating consumer transport with params:", {
+    id: params.id,
+    iceServers: params.iceServers,
+    iceCandidatesCount: params.iceCandidates?.length,
+  });
 
   recvTransport = device.createRecvTransport({
     ...params,
     // ✅ Pass ICE servers to the transport
     iceServers: params.iceServers || [{ urls: "stun:stun.l.google.com:19302" }],
+    // 🔥 Try without forcing relay first
+    // iceTransportPolicy: "relay",
+  });
+
+  // Monitor ICE gathering
+  recvTransport.on("icegatheringstatechange", (state) => {
+    console.log(`🧊 ICE Gathering State: ${state}`);
   });
 
   recvTransport.on(
@@ -129,11 +137,37 @@ async function createConsumerTransport(
     }
   );
 
-  // ✅ Monitor connection state
-  recvTransport.on("connectionstatechange", (state) => {
+  // ✅ Monitor connection state with detailed logging
+  recvTransport.on("connectionstatechange", async (state) => {
     console.log(`🔄 Transport connection state: ${state}`);
-    if (state === "failed" || state === "closed") {
-      console.error("❌ Transport connection failed/closed!");
+
+    if (state === "connected") {
+      console.log("✅ WebRTC connection established successfully!");
+
+      // Log some basic stats
+      try {
+        const stats = await recvTransport!.getStats();
+        const candidatePair = Array.from(stats.values()).find(
+          (s: any) => s.type === "candidate-pair" && s.state === "succeeded"
+        );
+        if (candidatePair) {
+          console.log("📊 Active connection:", {
+            localCandidateType: candidatePair.local?.candidateType,
+            remoteCandidateType: candidatePair.remote?.candidateType,
+            protocol: candidatePair.local?.protocol,
+          });
+        }
+      } catch (err) {
+        console.warn("Could not get stats:", err);
+      }
+    } else if (state === "failed") {
+      console.error("❌ Transport connection failed!");
+      console.error("This usually means:");
+      console.error("  1. Server IP (announcedIp) is incorrect");
+      console.error("  2. Firewall blocking UDP/TCP ports");
+      console.error("  3. TURN server not working properly");
+    } else if (state === "closed") {
+      console.error("❌ Transport connection closed!");
     }
   });
 
