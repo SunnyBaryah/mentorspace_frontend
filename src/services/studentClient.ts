@@ -103,9 +103,11 @@ async function createConsumerTransport(
     ...params,
     // ✅ Pass ICE servers to the transport
     iceServers: params.iceServers || [{ urls: "stun:stun.l.google.com:19302" }],
-    // 🔥 Try without forcing relay first
+    // 🔥 FORCE relay mode - Railway blocks direct connections
     // iceTransportPolicy: "relay",
   });
+
+  // console.log("⚠️ Using relay-only mode (required for Railway)");
 
   // Monitor ICE gathering
   recvTransport.on("icegatheringstatechange", (state) => {

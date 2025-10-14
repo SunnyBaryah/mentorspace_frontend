@@ -86,7 +86,11 @@ async function loadDevice(routerRtpCapabilities: RtpCapabilities) {
 }
 
 async function createSendTransport(params: TransportOptions) {
-  sendTransport = device.createSendTransport(params);
+  sendTransport = device.createSendTransport({
+    ...params,
+    iceServers: params.iceServers,
+    // iceTransportPolicy: "relay", // Add this line
+  });
 
   // --- Transport connection ---
   sendTransport.on("connect", ({ dtlsParameters }, callback, _) => {
