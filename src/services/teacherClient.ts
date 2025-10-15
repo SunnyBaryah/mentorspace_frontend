@@ -89,7 +89,7 @@ async function createSendTransport(params: TransportOptions) {
   sendTransport = device.createSendTransport({
     ...params,
     iceServers: params.iceServers,
-    iceTransportPolicy: "relay", // Add this line
+    // iceTransportPolicy: "relay", // Add this line
   });
 
   // --- Transport connection ---
