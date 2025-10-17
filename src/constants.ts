@@ -1,7 +1,6 @@
 export const backend_url =
   "https://mentorspacebackend-production.up.railway.app/api/v1";
-export const socket_url =
-  "https://mentorspacebackend-production.up.railway.app";
+export const socket_url = "http://13.62.169.145:9000";
 
 // export const backend_url = "https://mentorspace-backend.onrender.com/api/v1";
 // export const socket_url = "https://mentorspace-backend.onrender.com";
